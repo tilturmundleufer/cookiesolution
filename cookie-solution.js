@@ -266,6 +266,14 @@
     });
   }
   function saveAndApply(newState){
+    const oldState = currentState();
+    
+    // Check if any category was removed (changed from true to false)
+    const categoryRemoved = CONFIG.categories.some(cat => {
+      if(cat === 'essential') return false; // essential is always true
+      return oldState[cat] === true && newState[cat] === false;
+    });
+    
     _stateCache = newState;
     writeState(newState);
     applyGcmFrom(newState);
@@ -275,6 +283,11 @@
     closeBanner();
     closePrefs();
     showManage();
+    
+    // Reload page if any category was removed
+    if(categoryRemoved){
+      window.location.reload();
+    }
   }
 
   // ---- Initialization ----
