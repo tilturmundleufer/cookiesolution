@@ -27,7 +27,7 @@ body{font-family:var(--cs-font)}
 .cs-btn--ghost{background:transparent;color:var(--cs-text)}
 .cs-icon-btn{background:transparent;border:0;color:var(--cs-text);font-size:18px;cursor:pointer}
 
-.cs-banner{position:fixed;inset:auto 0 0 0;z-index:var(--cs-z);background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.3)),var(--cs-bg);border-top:1px solid var(--cs-border)}
+.cs-banner{position:fixed;inset:auto 0 0 0;z-index:var(--cs-z);background:var(--cs-surface);border-top:1px solid var(--cs-border)}
 .cs-banner__inner{max-width:1000px;margin:0 auto;padding:16px;display:flex;gap:16px;align-items:center;justify-content:space-between}
 .cs-banner__text{max-width:68ch}
 .cs-banner__actions{display:flex;gap:10px}
