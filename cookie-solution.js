@@ -205,13 +205,6 @@
           if(tpl){
             const node = tpl.content.cloneNode(true);
             wrapper.appendChild(node);
-            const enableBtn = wrapper.querySelector('[data-cs="enable-functional"]');
-            if(enableBtn){ enableBtn.addEventListener('click', ()=>{
-              const s = { ...currentState(), functional: true, ts: Date.now() };
-              saveAndApply(s);
-            }); }
-            const prefsBtn = wrapper.querySelector('[data-cs="open-prefs"]');
-            if(prefsBtn){ prefsBtn.addEventListener('click', openPrefs); }
           }
         }
       });
@@ -310,6 +303,10 @@
           s[cat] = !!inp.checked;
         });
         s.ts = Date.now();
+        saveAndApply(s);
+      }
+      if(action==='enable-functional'){
+        const s = { ...currentState(), functional: true, ts: Date.now() };
         saveAndApply(s);
       }
     });
