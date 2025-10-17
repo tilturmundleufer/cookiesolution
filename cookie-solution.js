@@ -235,7 +235,11 @@
   // ---- UI control ----
   function openBanner(){ $('#cs-banner').hidden = false; }
   function closeBanner(){ $('#cs-banner').hidden = true; }
-  function openPrefs(){ $('#cs-prefs').hidden = false; trapFocus('#cs-prefs'); }
+  function openPrefs(){ 
+    $('#cs-prefs').hidden = false; 
+    updateUISwitches(currentState());
+    trapFocus('#cs-prefs'); 
+  }
   function closePrefs(){ $('#cs-prefs').hidden = true; releaseFocus(); }
   function showManage(){ const m = $('#cs-manage'); if(m) m.hidden = false; }
 
@@ -260,12 +264,21 @@
   // ---- State helpers ----
   let _stateCache = null;
   function currentState(){ return _stateCache || defaultState; }
+  function updateUISwitches(state){
+    // Update all category switches based on current state
+    document.querySelectorAll('[data-cs-cat]').forEach(inp=>{
+      const cat = inp.getAttribute('data-cs-cat');
+      if(cat==='essential') return; // always true
+      inp.checked = !!state[cat];
+    });
+  }
   function saveAndApply(newState){
     _stateCache = newState;
     writeState(newState);
     applyGcmFrom(newState);
     unleashScripts(newState);
     prepareEmbeds();
+    updateUISwitches(newState);
     closeBanner();
     closePrefs();
     showManage();
