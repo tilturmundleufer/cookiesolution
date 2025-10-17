@@ -6,7 +6,7 @@
   --cs-gap: 12px;
   --cs-z: 2147483000;
   /* Colors – change these to match your brand */
-  --cs-bg: #0f172a;
+  --cs-bg: #ffffff;
   --cs-surface: #111827;
   --cs-text: #e5e7eb;
   --cs-muted: #9ca3af;
@@ -52,7 +52,7 @@ body{font-family:var(--cs-font)}
 .cs-switch input:checked + .cs-switch__slider::after{transform:translateX(18px);background:var(--cs-primary-contrast)}
 
 /* Manage button bottom-left */
-.cs-manage{position:fixed;left:16px;bottom:16px;z-index:var(--cs-z);background:var(--cs-surface);color:var(--cs-text);border:1px solid var(--cs-border);border-radius:999px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.cs-manage{position:fixed;left:16px;bottom:16px;z-index:var(--cs-z);background:#2563eb;color:#ffffff;border:1px solid transparent;border-radius:999px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 
 /* Embed placeholder */
 .cs-embed-placeholder{display:grid;gap:10px;place-items:start;background:var(--cs-surface);border:1px dashed var(--cs-border);padding:12px;border-radius:10px}
