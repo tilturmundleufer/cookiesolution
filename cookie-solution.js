@@ -295,16 +295,6 @@
         const s = { ...defaultState, analytics: false, functional: false, marketing: false, ts: Date.now() };
         saveAndApply(s);
       }
-      if(action==='save'){
-        const s = { ...defaultState };
-        document.querySelectorAll('[data-cs-cat]').forEach(inp=>{
-          const cat = inp.getAttribute('data-cs-cat');
-          if(cat==='essential') return; // always true
-          s[cat] = !!inp.checked;
-        });
-        s.ts = Date.now();
-        saveAndApply(s);
-      }
       if(action==='enable-functional'){
         const s = { ...currentState(), functional: true, ts: Date.now() };
         saveAndApply(s);
