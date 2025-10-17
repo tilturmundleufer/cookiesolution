@@ -6,8 +6,8 @@
   --cs-gap: 12px;
   --cs-z: 2147483000;
   /* Colors – change these to match your brand */
-  --cs-bg: #ffffff;
-  --cs-surface: #111827;
+  --cs-bg: #111827;
+  --cs-surface: #ffffff;
   --cs-text: #e5e7eb;
   --cs-muted: #9ca3af;
   --cs-primary: #ffb101; /* brand accent */
