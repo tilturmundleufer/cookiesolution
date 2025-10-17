@@ -1,0 +1,37 @@
+
+
+{
+  "version": "1.0.0",
+  "categories": [
+    { "id": "essential", "name_de": "Essenziell", "name_en": "Essential" },
+    { "id": "analytics", "name_de": "Analytics", "name_en": "Analytics" },
+    { "id": "functional", "name_de": "Funktional", "name_en": "Functional" },
+    { "id": "marketing", "name_de": "Marketing", "name_en": "Marketing" }
+  ],
+  "vendors": [
+    {
+      "name": "Google Analytics 4",
+      "category": "analytics",
+      "how_to_use": "Einbinden als <script type=\"text/plain\" data-category=\"analytics\" src=\"https://www.googletagmanager.com/gtag/js?id=G-XXXX\"></script> und darunter Inline-Config ebenfalls mit type=\"text/plain\" data-category=\"analytics\".",
+      "notes": "Consent Mode v2 wird automatisch vom Cookie-Script gesetzt. Ersetze G-XXXX."
+    },
+    {
+      "name": "Hotjar",
+      "category": "analytics",
+      "how_to_use": "Hotjar Snippet als type=\"text/plain\" data-category=\"analytics\" einbinden.",
+      "notes": "Siehe Hotjar Doku für neueste Snippets."
+    },
+    {
+      "name": "YouTube Embeds",
+      "category": "functional",
+      "how_to_use": "<iframe data-category=\"functional\" src=\"https://www.youtube-nocookie.com/embed/ID\"></iframe> – das Script setzt src erst nach Zustimmung; alternativ data-src nutzen, um Vorab-Blocking sicherzustellen.",
+      "notes": "Nutze domain youtube-nocookie.com."
+    },
+    {
+      "name": "reCAPTCHA",
+      "category": "essential",
+      "how_to_use": "Lade das Script normal (ohne Blocking) ODER als type=\"text/plain\" data-category=\"essential\".",
+      "notes": "Nur einsetzen, wenn wirklich erforderlich; in der Privacy-Seite erklären."
+    }
+  ]
+}
