@@ -1,19 +1,4 @@
 
-
-:root{
-  --cs-font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  --cs-radius: 12px;
-  --cs-gap: 12px;
-  --cs-z: 2147483000;
-  /* Colors – change these to match your brand */
-  --cs-bg: #111827;
-  --cs-surface: #ffffff;
-  --cs-text: #111827;
-  --cs-muted: #5f6267;
-  --cs-primary: #ffb101; /* brand accent */
-  --cs-primary-contrast: #071a2a; /* readable text on primary */
-  --cs-border: #1f2937;
-}
 *{box-sizing:border-box}
 body{font-family:var(--cs-font)}
 
