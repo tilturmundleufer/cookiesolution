@@ -1,0 +1,16 @@
+:root{
+  --cs-font: "Sora", "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+  --cs-radius: 18px;
+  --cs-gap: 14px;
+  --cs-z: 2147483000;
+
+  /* Bubbles Offline Communities Palette */
+  --cs-bg: #0c0a1f;
+  --cs-surface: #f9f7ff;
+  --cs-text: #120f2d;
+  --cs-muted: #6d6c8a;
+  --cs-primary: #5f3dff;
+  --cs-primary-contrast: #ffffff;
+  --cs-border: #d7d3ff;
+}
+
