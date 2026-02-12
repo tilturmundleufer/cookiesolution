@@ -19,6 +19,8 @@
       secure: true
     },
     storageKey: "cs_consent_log",
+    webhookUrl: null, // e.g. "https://hook.eu1.make.com/xxx" or set via data-cs-webhook on script tag
+    consentLogRetentionDays: 365 * 3, // 3 years
     i18n: {
       de: {
         banner_title: "Cookies & Datenschutz",
@@ -100,6 +102,34 @@
   function $(sel,root=document){ return root.querySelector(sel); }
   function $$(sel,root=document){ return Array.from(root.querySelectorAll(sel)); }
 
+  function getWebhookUrl(){
+    const s = document.currentScript || document.querySelector('script[src*="cookie-solution"]');
+    return s?.getAttribute('data-cs-webhook') || CONFIG.webhookUrl || null;
+  }
+  function sendConsentToWebhook(state, action){
+    const url = getWebhookUrl();
+    if(!url) return;
+    const payload = {
+      ts: state.ts || Date.now(),
+      action,
+      consent: {
+        essential: state.essential,
+        analytics: state.analytics,
+        functional: state.functional,
+        marketing: state.marketing
+      },
+      version: VERSION,
+      region: state.region || "unknown",
+      domain: window.location.hostname
+    };
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(err => { if(typeof console !== 'undefined' && console.warn) console.warn('Cookie consent webhook error:', err); });
+  }
+
   // ---- I18N ----
   function currentLang(){
     const htmlLang = document.documentElement.lang || "";
@@ -119,15 +149,19 @@
   function readState(){
     try{ return JSON.parse(getCookie(CONFIG.cookie.name)) || null; }catch(e){ return null; }
   }
-  function writeState(state){
+  function writeState(state, action){
     const value = JSON.stringify(state);
     setCookie(CONFIG.cookie.name, value, CONFIG.cookie.days, CONFIG.cookie.domain, CONFIG.cookie.secure, CONFIG.cookie.sameSite);
     // local log for audit
     try{
       const log = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]");
-      log.push({ ts: Date.now(), state });
-      localStorage.setItem(CONFIG.storageKey, JSON.stringify(log));
+      log.push({ ts: Date.now(), action: action || "unknown", state });
+      const cutoff = Date.now() - (CONFIG.consentLogRetentionDays * 24 * 60 * 60 * 1000);
+      const pruned = log.filter(entry => entry.ts >= cutoff);
+      localStorage.setItem(CONFIG.storageKey, JSON.stringify(pruned));
     }catch(e){}
+    // webhook for Make.com / backend
+    if(action) sendConsentToWebhook(state, action);
   }
 
   // ---- Google Consent Mode v2 ----
@@ -265,7 +299,7 @@
       inp.checked = !!state[cat];
     });
   }
-  function saveAndApply(newState){
+  function saveAndApply(newState, action){
     const oldState = currentState();
     
     // Check if any category was removed (changed from true to false)
@@ -275,7 +309,7 @@
     });
     
     _stateCache = newState;
-    writeState(newState);
+    writeState(newState, action);
     applyGcmFrom(newState);
     unleashScripts(newState);
     prepareEmbeds();
@@ -302,15 +336,25 @@
       if(action==='close'){ closePrefs(); }
       if(action==='accept'){
         const s = { ...defaultState, analytics: true, functional: true, marketing: true, ts: Date.now() };
-        saveAndApply(s);
+        saveAndApply(s, 'accept_all');
       }
       if(action==='reject'){
         const s = { ...defaultState, analytics: false, functional: false, marketing: false, ts: Date.now() };
-        saveAndApply(s);
+        saveAndApply(s, 'reject_all');
+      }
+      if(action==='save-selection'){
+        const current = currentState();
+        const s = { ...defaultState, region: current.region, ts: Date.now() };
+        CONFIG.categories.forEach(cat=>{
+          if(cat==='essential') return;
+          const inp = document.querySelector(`[data-cs-cat="${cat}"]`);
+          s[cat] = inp ? !!inp.checked : false;
+        });
+        saveAndApply(s, 'save_selection');
       }
       if(action==='enable-functional'){
         const s = { ...currentState(), functional: true, ts: Date.now() };
-        saveAndApply(s);
+        saveAndApply(s, 'save_selection');
       }
     });
 

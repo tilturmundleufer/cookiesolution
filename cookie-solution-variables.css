@@ -1,0 +1,22 @@
+:root{
+  /* Typografie – angelehnt an turmundleufer.de */
+  --cs-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Spacing & Radius */
+  --cs-radius: 14px;
+  --cs-gap: 14px;
+  --cs-z: 2147483000;
+
+  /* Farben – Turm & Leufer Look */
+  --cs-bg: #ffffff;           /* helle Fläche wie der Seitenhintergrund */
+  --cs-surface: #ffffff;      /* Karten / Banner-Hintergrund */
+  --cs-text: #020617;         /* sehr dunkles Blau-Schwarz für Text */
+  --cs-muted: #6b7280;        /* dezenter Grauton für Sekundärtexte */
+
+  /* Primäre Akzentfarbe (Orange) */
+  --cs-primary: #f97316;      /* Orange-Akzent ähnlich CTA-Farbe */
+  --cs-primary-contrast: #0f172a; /* gut lesbarer Text auf Orange */
+
+  /* Rahmen / Divider */
+  --cs-border: #e5e7eb;       /* helles Grau für Linien */
+}

@@ -1,0 +1,119 @@
+<!-- Cookie Solution - Webflow Code Embed Template -->
+<!-- Kopiere diesen gesamten Code in ein Webflow Code Embed Element -->
+
+<!-- CSS Variablen - Passe diese für deine Marke an -->
+<style>
+  :root{
+    --cs-font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    --cs-radius: 12px;
+    --cs-gap: 12px;
+    --cs-z: 2147483000;
+    /* Colors – change these to match your brand */
+    --cs-bg: #111827;
+    --cs-surface: #ffffff;
+    --cs-text: #111827;
+    --cs-muted: #5f6267;
+    --cs-primary: #ffb101; /* brand accent */
+    --cs-primary-contrast: #071a2a; /* readable text on primary */
+    --cs-border: #1f2937;
+  }
+</style>
+
+<!-- CSS und JS von Vercel laden -->
+<link rel="stylesheet" href="https://cookiesolution.vercel.app/cookie-solution.css">
+
+<!-- Consent Banner -->
+<div id="cs-banner" class="cs-banner" role="dialog" aria-modal="true" aria-labelledby="cs-banner-title" aria-describedby="cs-banner-desc" hidden>
+  <div class="cs-banner__inner">
+    <div class="cs-banner__text">
+      <h2 id="cs-banner-title" class="cs-h2" data-i18n="banner_title">Cookies & Datenschutz</h2>
+      <p id="cs-banner-desc" class="cs-p" data-i18n="banner_desc">Wir verwenden Cookies, um unsere Website zu betreiben und zu verbessern. Sie können Ihre Auswahl anpassen.</p>
+      <button class="cs-link cs-link--prefs" data-cs="open-prefs" data-i18n="banner_prefs">Einstellungen</button>
+    </div>
+    <div class="cs-banner__actions">
+      <button class="cs-btn cs-btn--ghost" data-cs="reject" data-i18n="btn_reject">Nur Essenzielle</button>
+      <button class="cs-btn cs-btn--primary" data-cs="accept" data-i18n="btn_accept">Alle akzeptieren</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preferences Modal -->
+<div id="cs-prefs" class="cs-modal" role="dialog" aria-modal="true" aria-labelledby="cs-prefs-title" hidden>
+  <div class="cs-modal__backdrop" data-cs="close"></div>
+  <div class="cs-modal__dialog" role="document">
+    <header class="cs-modal__header">
+      <h3 id="cs-prefs-title" class="cs-h3" data-i18n="prefs_title">Cookie-Einstellungen</h3>
+      <button class="cs-icon-btn" aria-label="Close" data-cs="close">✕</button>
+    </header>
+    <div class="cs-modal__body">
+      <p class="cs-p" data-i18n="prefs_intro">Wählen Sie aus, welche Kategorien wir verwenden dürfen. Essenzielle Cookies sind immer aktiv.</p>
+      <ul class="cs-list">
+        <li class="cs-item">
+          <label class="cs-switch">
+            <input type="checkbox" data-cs-cat="essential" checked disabled />
+            <span class="cs-switch__slider"></span>
+            <span class="cs-item__label">
+              <strong data-i18n="cat_essential">Essenziell</strong>
+              <small data-i18n="cat_essential_desc">Erforderlich für die Grundfunktionen der Website.</small>
+            </span>
+          </label>
+        </li>
+        <li class="cs-item">
+          <label class="cs-switch">
+            <input type="checkbox" data-cs-cat="analytics" />
+            <span class="cs-switch__slider"></span>
+            <span class="cs-item__label">
+              <strong data-i18n="cat_analytics">Analytics</strong>
+              <small data-i18n="cat_analytics_desc">Hilft uns, die Leistung zu messen (z. B. GA4, Hotjar).</small>
+            </span>
+          </label>
+        </li>
+        <li class="cs-item">
+          <label class="cs-switch">
+            <input type="checkbox" data-cs-cat="functional" />
+            <span class="cs-switch__slider"></span>
+            <span class="cs-item__label">
+              <strong data-i18n="cat_functional">Funktional</strong>
+              <small data-i18n="cat_functional_desc">Komfortfunktionen & eingebettete Medien (z. B. YouTube, Karten).</small>
+            </span>
+          </label>
+        </li>
+        <li class="cs-item">
+          <label class="cs-switch">
+            <input type="checkbox" data-cs-cat="marketing" />
+            <span class="cs-switch__slider"></span>
+            <span class="cs-item__label">
+              <strong data-i18n="cat_marketing">Marketing</strong>
+              <small data-i18n="cat_marketing_desc">Personalisierte Werbung & Tracking durch Dritte.</small>
+            </span>
+          </label>
+        </li>
+      </ul>
+    </div>
+    <footer class="cs-modal__footer">
+      <button class="cs-btn cs-btn--ghost" data-cs="reject" data-i18n="btn_reject">Nur Essenzielle</button>
+      <button class="cs-btn cs-btn--secondary" data-cs="save-selection" data-i18n="btn_save">Auswahl speichern</button>
+      <button class="cs-btn cs-btn--primary" data-cs="accept" data-i18n="btn_accept">Alle akzeptieren</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Persistent Manage Button (bottom-left) -->
+<button id="cs-manage" class="cs-manage" data-cs="open-prefs" aria-haspopup="dialog" aria-controls="cs-prefs" hidden>
+  <span data-i18n="manage_label">Cookie-Einstellungen</span>
+</button>
+
+<!-- Placeholder template for blocked embeds -->
+<template id="cs-embed-placeholder-template">
+  <div class="cs-embed-placeholder">
+    <p class="cs-p" data-i18n="embed_blocked">Dieses eingebettete Medium ist blockiert, bis Sie <em>Funktional</em> erlauben.</p>
+    <div class="cs-embed-actions">
+      <button class="cs-btn cs-btn--primary" data-cs="enable-functional" data-i18n="enable_functional">Funktionale Cookies erlauben</button>
+      <button class="cs-btn cs-btn--ghost" data-cs="open-prefs" data-i18n="banner_prefs">Einstellungen</button>
+    </div>
+  </div>
+</template>
+
+<!-- JavaScript von Vercel laden -->
+<!-- Optional: data-cs-webhook="https://hook.eu1.make.com/xxx" für Consent-Tracking hinzufügen -->
+<script src="https://cookiesolution.vercel.app/cookie-solution.js" defer></script>
