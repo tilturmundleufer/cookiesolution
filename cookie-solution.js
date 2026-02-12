@@ -4,7 +4,7 @@
   const VERSION = "1.0.0";
   const CONFIG = {
     showOnlyInRegions: ["EU","UK","CH"], // logical indicator; set geoEndpoint for real gating
-    geoEndpoint: null, // e.g. "https://ipapi.co/json/" returning { country_code }
+    geoEndpoint: "https://ipapi.co/json/", // returns { country_code, country_name }; set null to disable
     euCountryCodes: [
       "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE","IS","LI","NO" // EEA ext.
     ],
@@ -126,6 +126,7 @@
   function sendConsentToWebhook(state, action, source){
     const url = getWebhookUrl();
     if(!url) return;
+    const geo = _geoCache || {};
     const payload = {
       ts: state.ts || Date.now(),
       action,
@@ -136,12 +137,14 @@
         marketing: !!state.marketing
       },
       version: VERSION,
-      region: state.region || "unknown",
+      region: state.region || geo.region || "unknown",
       language: currentLang(),
       consent_uid: state.consent_uid || getOrCreateConsentUid(),
       gpc: (navigator.globalPrivacyControl === true),
       source: source || null,
-      domain: window.location.hostname
+      domain: window.location.hostname,
+      country_code: geo.country_code || null,
+      country_name: geo.country_name || null
     };
     fetch(url, {
       method: 'POST',
@@ -183,6 +186,10 @@
     }catch(e){}
     // webhook for Make.com / backend
     if(action) sendConsentToWebhook(state, action, source);
+  }
+  function writeStateSilent(state){
+    const value = JSON.stringify(state);
+    setCookie(CONFIG.cookie.name, value, CONFIG.cookie.days, CONFIG.cookie.domain, CONFIG.cookie.secure, CONFIG.cookie.sameSite);
   }
 
   // ---- Google Consent Mode v2 ----
@@ -266,18 +273,36 @@
     });
   }
 
-  // ---- Geo gating (optional) ----
-  async function inTargetRegion(){
-    if(!CONFIG.geoEndpoint) return true; // show banner everywhere if no endpoint configured
+  // ---- Geo (gating + consent payload) ----
+  let _geoCache = null;
+  function countryToRegion(cc){
+    if(!cc) return "unknown";
+    if(CONFIG.euCountryCodes.includes(cc)) return "EU";
+    if(CONFIG.ukCodes.includes(cc)) return "UK";
+    if(CONFIG.chCodes.includes(cc)) return "CH";
+    return "OTHER";
+  }
+  async function fetchGeo(){
+    if(_geoCache) return _geoCache;
+    if(!CONFIG.geoEndpoint) return null;
     try{
       const res = await fetch(CONFIG.geoEndpoint, { credentials: 'omit' });
       const data = await res.json();
       const cc = (data.country_code || data.country || "").toUpperCase();
-      if(CONFIG.euCountryCodes.includes(cc)) return true;
-      if(CONFIG.ukCodes.includes(cc)) return true;
-      if(CONFIG.chCodes.includes(cc)) return true;
-      return false;
-    }catch(e){ return true; } // fail-open to show banner
+      _geoCache = {
+        country_code: cc || null,
+        country_name: data.country_name || null,
+        region: countryToRegion(cc)
+      };
+      defaultState.region = _geoCache.region;
+      return _geoCache;
+    }catch(e){ return null; }
+  }
+  async function inTargetRegion(){
+    if(!CONFIG.geoEndpoint) return true;
+    const geo = await fetchGeo();
+    if(!geo) return true;
+    return geo.region !== "OTHER";
   }
 
   // ---- UI control ----
@@ -352,6 +377,9 @@
     // Initialize a stable pseudonymous consent UID for this browser/device
     defaultState.consent_uid = getOrCreateConsentUid();
 
+    // Fetch geo early (for consent payload and banner gating)
+    fetchGeo();
+
     // Wire buttons
     document.body.addEventListener('click', (e)=>{
       const t = e.target.closest('[data-cs]'); if(!t) return;
@@ -386,6 +414,13 @@
     const stored = readState();
     if(stored){
       _stateCache = { ...defaultState, ...stored };
+      const geo = await fetchGeo();
+      if(geo) defaultState.region = geo.region;
+      if(geo && (stored.region === "unknown" || !stored.region)){
+        const updated = { ...stored, region: geo.region };
+        _stateCache = { ...defaultState, ...updated };
+        writeStateSilent(updated);
+      }
       applyGcmFrom(_stateCache);
       unleashScripts(_stateCache);
       prepareEmbeds();
