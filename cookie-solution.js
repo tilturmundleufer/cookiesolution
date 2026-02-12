@@ -19,7 +19,7 @@
       secure: true
     },
     storageKey: "cs_consent_log",
-    webhookUrl: null, // e.g. "https://hook.eu1.make.com/xxx" or set via data-cs-webhook on script tag
+    webhookUrl: "https://t-l-consent-handling.vercel.app/api/consentHandler", // override via data-cs-webhook on script tag
     consentLogRetentionDays: 365 * 3, // 3 years
     i18n: {
       de: {
