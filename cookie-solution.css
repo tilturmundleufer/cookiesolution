@@ -9,7 +9,7 @@ body{font-family:var(--cs-font)}
 
 .cs-btn{border:1px solid var(--cs-border);padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
 .cs-btn--primary{background:var(--cs-primary);color:var(--cs-primary-contrast);border-color:transparent}
-.cs-btn--secondary{background:var(--cs-border);color:var(--cs-text);border-color:var(--cs-border)}
+.cs-btn--secondary{background:var(--cs-border);color:var(--cs-surface);border-color:var(--cs-border)}
 .cs-btn--ghost{background:transparent;color:var(--cs-text)}
 .cs-icon-btn{background:transparent;border:0;color:var(--cs-text);font-size:18px;cursor:pointer}
 
