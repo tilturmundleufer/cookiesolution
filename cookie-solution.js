@@ -102,24 +102,45 @@
   function $(sel,root=document){ return root.querySelector(sel); }
   function $$(sel,root=document){ return Array.from(root.querySelectorAll(sel)); }
 
+  // Stable, pseudonymous ID per browser/device (helps with reporting without storing IP)
+  function getOrCreateConsentUid(){
+    try{
+      const k = 'cs_consent_uid';
+      const existing = localStorage.getItem(k);
+      if(existing) return existing;
+      const uid = (crypto && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : ('uid_' + Math.random().toString(16).slice(2) + Date.now().toString(16));
+      localStorage.setItem(k, uid);
+      return uid;
+    }catch(e){
+      // Fallback when localStorage is blocked
+      return 'uid_' + Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+  }
+
   function getWebhookUrl(){
     const s = document.currentScript || document.querySelector('script[src*="cookie-solution"]');
     return s?.getAttribute('data-cs-webhook') || CONFIG.webhookUrl || null;
   }
-  function sendConsentToWebhook(state, action){
+  function sendConsentToWebhook(state, action, source){
     const url = getWebhookUrl();
     if(!url) return;
     const payload = {
       ts: state.ts || Date.now(),
       action,
       consent: {
-        essential: state.essential,
-        analytics: state.analytics,
-        functional: state.functional,
-        marketing: state.marketing
+        essential: true,
+        analytics: !!state.analytics,
+        functional: !!state.functional,
+        marketing: !!state.marketing
       },
       version: VERSION,
       region: state.region || "unknown",
+      language: currentLang(),
+      consent_uid: state.consent_uid || getOrCreateConsentUid(),
+      gpc: (navigator.globalPrivacyControl === true),
+      source: source || null,
       domain: window.location.hostname
     };
     fetch(url, {
@@ -145,11 +166,11 @@
   }
 
   // ---- Consent State ----
-  const defaultState = { version: VERSION, essential: true, analytics: false, functional: false, marketing: false, ts: Date.now(), region: "unknown" };
+  const defaultState = { version: VERSION, essential: true, analytics: false, functional: false, marketing: false, ts: Date.now(), region: "unknown", consent_uid: null };
   function readState(){
     try{ return JSON.parse(getCookie(CONFIG.cookie.name)) || null; }catch(e){ return null; }
   }
-  function writeState(state, action){
+  function writeState(state, action, source){
     const value = JSON.stringify(state);
     setCookie(CONFIG.cookie.name, value, CONFIG.cookie.days, CONFIG.cookie.domain, CONFIG.cookie.secure, CONFIG.cookie.sameSite);
     // local log for audit
@@ -161,7 +182,7 @@
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(pruned));
     }catch(e){}
     // webhook for Make.com / backend
-    if(action) sendConsentToWebhook(state, action);
+    if(action) sendConsentToWebhook(state, action, source);
   }
 
   // ---- Google Consent Mode v2 ----
@@ -299,7 +320,7 @@
       inp.checked = !!state[cat];
     });
   }
-  function saveAndApply(newState, action){
+  function saveAndApply(newState, action, source){
     const oldState = currentState();
     
     // Check if any category was removed (changed from true to false)
@@ -309,7 +330,7 @@
     });
     
     _stateCache = newState;
-    writeState(newState, action);
+    writeState(newState, action, source);
     applyGcmFrom(newState);
     unleashScripts(newState);
     prepareEmbeds();
@@ -328,6 +349,9 @@
   onReady(async ()=>{
     applyI18n();
 
+    // Initialize a stable pseudonymous consent UID for this browser/device
+    defaultState.consent_uid = getOrCreateConsentUid();
+
     // Wire buttons
     document.body.addEventListener('click', (e)=>{
       const t = e.target.closest('[data-cs]'); if(!t) return;
@@ -336,11 +360,11 @@
       if(action==='close'){ closePrefs(); }
       if(action==='accept'){
         const s = { ...defaultState, analytics: true, functional: true, marketing: true, ts: Date.now() };
-        saveAndApply(s, 'accept_all');
+        saveAndApply(s, 'accept_all', 'banner');
       }
       if(action==='reject'){
         const s = { ...defaultState, analytics: false, functional: false, marketing: false, ts: Date.now() };
-        saveAndApply(s, 'reject_all');
+        saveAndApply(s, 'reject_all', 'banner');
       }
       if(action==='save-selection'){
         const current = currentState();
@@ -350,11 +374,11 @@
           const inp = document.querySelector(`[data-cs-cat="${cat}"]`);
           s[cat] = inp ? !!inp.checked : false;
         });
-        saveAndApply(s, 'save_selection');
+        saveAndApply(s, 'save_selection', 'prefs');
       }
       if(action==='enable-functional'){
         const s = { ...currentState(), functional: true, ts: Date.now() };
-        saveAndApply(s, 'save_selection');
+        saveAndApply(s, 'save_selection', 'embed_prompt');
       }
     });
 
