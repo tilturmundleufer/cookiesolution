@@ -1,0 +1,27 @@
+/**
+ * Cookie Solution – State of Mind Variablen
+ * Farbpalette angelehnt an https://state-of-mind-5531fe.webflow.io/
+ * (Halden Miller Template: Dark, Light, Red, Accent)
+ */
+:root {
+  /* Typografie – Montserrat wie auf der Seite */
+  --cs-font: "Montserrat", system-ui, -apple-system, Segoe UI, sans-serif;
+
+  /* Spacing & Radius */
+  --cs-radius: 12px;
+  --cs-gap: 14px;
+  --cs-z: 2147483000;
+
+  /* Farben – State of Mind / Halden Miller Look */
+  --cs-bg: #0f172a;           /* Dark – dunkler Navy-Hintergrund */
+  --cs-surface: #faf9f6;      /* Light – warmes Off-White für Banner/Karten */
+  --cs-text: #0f172a;         /* Dark – Haupttext */
+  --cs-muted: #64748b;        /* dezent für Sekundärtexte */
+
+  /* Primäre Akzentfarbe – warmes Gold/Amber (Accent) */
+  --cs-primary: #c9a227;
+  --cs-primary-contrast: #0f172a; /* gut lesbarer Text auf Akzent */
+
+  /* Rahmen / Divider */
+  --cs-border: #e2e8f0;        /* helles Grau für Linien */
+}

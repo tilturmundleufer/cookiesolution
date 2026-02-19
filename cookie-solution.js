@@ -157,8 +157,8 @@
   // ---- I18N ----
   function currentLang(){
     const htmlLang = document.documentElement.lang || "";
-    const navLang = navigator.language || "";
-    return /^de/i.test(htmlLang||navLang) ? "de" : "en";
+    const navLang = navigator.language || navigator.userLanguage || "";
+    return /^de/i.test(navLang || htmlLang) ? "de" : "en";
   }
   function applyI18n(){
     const dict = CONFIG.i18n[currentLang()];
