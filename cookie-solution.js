@@ -3,8 +3,8 @@
 (() => {
   const VERSION = "1.0.0";
   const CONFIG = {
-    showOnlyInRegions: ["EU","UK","CH"], // logical indicator; set geoEndpoint for real gating
-    geoEndpoint: "https://ipapi.co/json/", // returns { country_code, country_name }; set null to disable
+    showOnlyInRegions: ["EU","UK","CH"],
+    geoEndpoint: null, // disabled by default to avoid third-party geo requests before consent
     euCountryCodes: [
       "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE","IS","LI","NO" // EEA ext.
     ],
@@ -19,7 +19,7 @@
       secure: true
     },
     storageKey: "cs_consent_log",
-    webhookUrl: "https://t-l-consent-handling.vercel.app/api/consentHandler", // override via data-cs-webhook on script tag
+    webhookUrl: null, // set via data-cs-webhook or here if server-side logging is required
     consentLogRetentionDays: 365 * 3, // 3 years
     i18n: {
       de: {
@@ -126,7 +126,7 @@
   function sendConsentToWebhook(state, action, source){
     const url = getWebhookUrl();
     if(!url) return;
-    const geo = _geoCache || {};
+    const localeGeo = deriveGeoFromLocale();
     const payload = {
       ts: state.ts || Date.now(),
       action,
@@ -137,14 +137,14 @@
         marketing: !!state.marketing
       },
       version: VERSION,
-      region: state.region || geo.region || "unknown",
+      region: state.region || localeGeo.region || "unknown",
       language: currentLang(),
       consent_uid: state.consent_uid || getOrCreateConsentUid(),
       gpc: (navigator.globalPrivacyControl === true),
       source: source || null,
       domain: window.location.hostname,
-      country_code: geo.country_code || null,
-      country_name: geo.country_name || null
+      country_code: state.country_code || localeGeo.country_code || null,
+      country_name: null
     };
     fetch(url, {
       method: 'POST',
@@ -169,27 +169,31 @@
   }
 
   // ---- Consent State ----
-  const defaultState = { version: VERSION, essential: true, analytics: false, functional: false, marketing: false, ts: Date.now(), region: "unknown", consent_uid: null };
+  const defaultState = { version: VERSION, essential: true, analytics: false, functional: false, marketing: false, ts: Date.now(), region: "unknown", country_code: null, consent_uid: null };
   function readState(){
     try{ return JSON.parse(getCookie(CONFIG.cookie.name)) || null; }catch(e){ return null; }
   }
   function writeState(state, action, source){
-    const value = JSON.stringify(state);
+    const localeGeo = deriveGeoFromLocale();
+    const effectiveState = {
+      ...state,
+      region: state.region && state.region !== "unknown" ? state.region : localeGeo.region,
+      country_code: state.country_code || localeGeo.country_code || null,
+      consent_uid: state.consent_uid || getOrCreateConsentUid()
+    };
+    const value = JSON.stringify(effectiveState);
     setCookie(CONFIG.cookie.name, value, CONFIG.cookie.days, CONFIG.cookie.domain, CONFIG.cookie.secure, CONFIG.cookie.sameSite);
     // local log for audit
     try{
       const log = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]");
-      log.push({ ts: Date.now(), action: action || "unknown", state });
+      log.push({ ts: Date.now(), action: action || "unknown", state: effectiveState });
       const cutoff = Date.now() - (CONFIG.consentLogRetentionDays * 24 * 60 * 60 * 1000);
       const pruned = log.filter(entry => entry.ts >= cutoff);
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(pruned));
     }catch(e){}
+    _stateCache = effectiveState;
     // webhook for Make.com / backend
-    if(action) sendConsentToWebhook(state, action, source);
-  }
-  function writeStateSilent(state){
-    const value = JSON.stringify(state);
-    setCookie(CONFIG.cookie.name, value, CONFIG.cookie.days, CONFIG.cookie.domain, CONFIG.cookie.secure, CONFIG.cookie.sameSite);
+    if(action) sendConsentToWebhook(effectiveState, action, source);
   }
 
   // ---- Google Consent Mode v2 ----
@@ -273,8 +277,7 @@
     });
   }
 
-  // ---- Geo (gating + consent payload) ----
-  let _geoCache = null;
+  // ---- Region derivation (no external geo requests) ----
   function countryToRegion(cc){
     if(!cc) return "unknown";
     if(CONFIG.euCountryCodes.includes(cc)) return "EU";
@@ -282,27 +285,14 @@
     if(CONFIG.chCodes.includes(cc)) return "CH";
     return "OTHER";
   }
-  async function fetchGeo(){
-    if(_geoCache) return _geoCache;
-    if(!CONFIG.geoEndpoint) return null;
-    try{
-      const res = await fetch(CONFIG.geoEndpoint, { credentials: 'omit' });
-      const data = await res.json();
-      const cc = (data.country_code || data.country || "").toUpperCase();
-      _geoCache = {
-        country_code: cc || null,
-        country_name: data.country_name || null,
-        region: countryToRegion(cc)
-      };
-      defaultState.region = _geoCache.region;
-      return _geoCache;
-    }catch(e){ return null; }
-  }
-  async function inTargetRegion(){
-    if(!CONFIG.geoEndpoint) return true;
-    const geo = await fetchGeo();
-    if(!geo) return true;
-    return geo.region !== "OTHER";
+  function deriveGeoFromLocale(){
+    const navLang = (navigator.language || navigator.userLanguage || "").toUpperCase();
+    const localeParts = navLang.split("-");
+    const cc = (localeParts.length > 1 && localeParts[1].length === 2) ? localeParts[1] : null;
+    return {
+      country_code: cc,
+      region: countryToRegion(cc)
+    };
   }
 
   // ---- UI control ----
@@ -374,11 +364,10 @@
   onReady(async ()=>{
     applyI18n();
 
-    // Initialize a stable pseudonymous consent UID for this browser/device
-    defaultState.consent_uid = getOrCreateConsentUid();
-
-    // Fetch geo early (for consent payload and banner gating)
-    fetchGeo();
+    // Derive region/country locally from browser locale (no network call).
+    const localeGeo = deriveGeoFromLocale();
+    defaultState.region = localeGeo.region;
+    defaultState.country_code = localeGeo.country_code;
 
     // Wire buttons
     document.body.addEventListener('click', (e)=>{
@@ -414,13 +403,9 @@
     const stored = readState();
     if(stored){
       _stateCache = { ...defaultState, ...stored };
-      const geo = await fetchGeo();
-      if(geo) defaultState.region = geo.region;
-      if(geo && (stored.region === "unknown" || !stored.region)){
-        const updated = { ...stored, region: geo.region };
-        _stateCache = { ...defaultState, ...updated };
-        writeStateSilent(updated);
-      }
+      // Backfill missing region/country in-memory only (no silent cookie rewrite, no webhook).
+      if(!_stateCache.region || _stateCache.region === "unknown") _stateCache.region = defaultState.region;
+      if(!_stateCache.country_code) _stateCache.country_code = defaultState.country_code;
       applyGcmFrom(_stateCache);
       unleashScripts(_stateCache);
       prepareEmbeds();
@@ -428,9 +413,8 @@
       return; // Do not show banner again
     }
 
-    // Geo gating (optional – defaults to show)
-    const show = await inTargetRegion();
-    if(show){ openBanner(); }
+    // Always show banner if no prior consent exists.
+    openBanner();
 
     // Prepare blocked embeds even before consent
     prepareEmbeds();
