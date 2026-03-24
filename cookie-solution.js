@@ -3,8 +3,9 @@
 (() => {
   const VERSION = "1.0.0";
   const CONFIG = {
-    showOnlyInRegions: ["EU","UK","CH"],
-    geoEndpoint: null, // disabled by default to avoid third-party geo requests before consent
+    /** null oder [] = Cookie-Banner für alle Besucher. z. B. ["EU","UK","CH"] = Banner nur wenn Region (aus Browser-Sprache/Land) passt; sonst stiller Opt-in aller Kategorien (nur Heuristik, kein Geo-API). */
+    showOnlyInRegions: null,
+    geoEndpoint: null, // optional: URL für JSON { country_code } — wenn gesetzt, vor Banner-Auswahl abfragen (Netzwerk)
     euCountryCodes: [
       "AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE","IS","LI","NO" // EEA ext.
     ],
@@ -26,6 +27,9 @@
         banner_title: "Cookies & Datenschutz",
         banner_desc: "Wir verwenden Cookies, um unsere Website zu betreiben und zu verbessern. Sie können Ihre Auswahl anpassen.",
         banner_prefs: "Einstellungen",
+        link_terms: "AGB",
+        link_privacy: "Datenschutzerklärung",
+        link_imprint: "Impressum",
         btn_accept: "Alle akzeptieren",
         btn_reject: "Nur Essenzielle",
         btn_save: "Auswahl speichern",
@@ -47,6 +51,9 @@
         banner_title: "Cookies & Privacy",
         banner_desc: "We use cookies to operate and improve our site. You can adjust your choices.",
         banner_prefs: "Preferences",
+        link_terms: "Terms",
+        link_privacy: "Privacy Policy",
+        link_imprint: "Imprint",
         btn_accept: "Accept all",
         btn_reject: "Essentials only",
         btn_save: "Save selection",
@@ -196,33 +203,39 @@
     if(action) sendConsentToWebhook(effectiveState, action, source);
   }
 
-  // ---- Google Consent Mode v2 ----
+  // ---- Google Consent Mode v2 (Defaults ggf. schon im Head-Inline-Snippet; siehe webflow-embed-template) ----
+  const GCM_DEFAULT_CONSENT = {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    security_storage: 'granted'
+  };
   window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
+  if(typeof window.gtag !== 'function'){
+    window.gtag = function(){ window.dataLayer.push(arguments); };
+  }
+  function applyConsentDefaultsOnce(){
+    if(window.__csGcmDefaultsApplied) return;
+    window.gtag('consent','default', GCM_DEFAULT_CONSENT);
+    window.__csGcmDefaultsApplied = true;
+  }
+  applyConsentDefaultsOnce();
   function applyGcmFrom(state){
     const gpc = (navigator.globalPrivacyControl === true);
-    // Effective booleans (deny if GPC and user hasn't opted in explicitly)
     const analytics = state.analytics && !gpc;
     const marketing = state.marketing && !gpc;
-    const functional = state.functional; // maps to functionality/security storage when applicable
-    gtag('consent','update',{
+    const functional = state.functional;
+    window.gtag('consent','update',{
       'ad_storage': marketing ? 'granted' : 'denied',
       'ad_user_data': marketing ? 'granted' : 'denied',
       'ad_personalization': marketing ? 'granted' : 'denied',
       'analytics_storage': analytics ? 'granted' : 'denied',
       'functionality_storage': functional ? 'granted' : 'denied',
-      'security_storage': 'granted' // recommended to keep essential security allowed
+      'security_storage': 'granted'
     });
   }
-  // set defaults ASAP (denied except security)
-  gtag('consent','default',{
-    'ad_storage': 'denied',
-    'ad_user_data': 'denied',
-    'ad_personalization': 'denied',
-    'analytics_storage': 'denied',
-    'functionality_storage': 'denied',
-    'security_storage': 'granted'
-  });
 
   // ---- Script/Embed (un)blocking by category ----
   function unleashScripts(state){
@@ -294,6 +307,30 @@
       region: countryToRegion(cc)
     };
   }
+  async function resolveGeo(){
+    if(CONFIG.geoEndpoint){
+      try{
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 3500);
+        const r = await fetch(CONFIG.geoEndpoint, { credentials: 'omit', mode: 'cors', signal: ctrl.signal });
+        clearTimeout(timer);
+        if(!r.ok) throw new Error('geo');
+        const j = await r.json();
+        const cc = String(j.country_code || j.countryCode || '').toUpperCase();
+        if(cc.length === 2){
+          return { country_code: cc, region: countryToRegion(cc) };
+        }
+      }catch(e){}
+    }
+    return deriveGeoFromLocale();
+  }
+  function shouldShowConsentBanner(){
+    const list = CONFIG.showOnlyInRegions;
+    if(list == null || !Array.isArray(list) || list.length === 0) return true;
+    const r = defaultState.region;
+    if(r === 'unknown') return true;
+    return list.includes(r);
+  }
 
   // ---- UI control ----
   function openBanner(){ $('#cs-banner').hidden = false; }
@@ -364,8 +401,7 @@
   onReady(async ()=>{
     applyI18n();
 
-    // Derive region/country locally from browser locale (no network call).
-    const localeGeo = deriveGeoFromLocale();
+    const localeGeo = await resolveGeo();
     defaultState.region = localeGeo.region;
     defaultState.country_code = localeGeo.country_code;
 
@@ -413,10 +449,13 @@
       return; // Do not show banner again
     }
 
-    // Always show banner if no prior consent exists.
-    openBanner();
+    if(!shouldShowConsentBanner()){
+      const s = { ...defaultState, analytics: true, functional: true, marketing: true, ts: Date.now() };
+      saveAndApply(s, 'auto_region_outside', 'init');
+      return;
+    }
 
-    // Prepare blocked embeds even before consent
+    openBanner();
     prepareEmbeds();
   });
 })();

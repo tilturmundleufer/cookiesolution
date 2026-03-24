@@ -2,6 +2,8 @@
 
 DSGVO-konforme Cookie-Einwilligungslösung mit Consent-Tracking, Kategorie-Auswahl und Webhook-Integration für Make.com.
 
+**Build:** Nach Änderungen an `cookie-solution.js` oder `cookie-solution.css` die Minified-Dateien neu erzeugen, z. B. `npx terser cookie-solution.js -c -m -o cookie-solution.min.js` und `npx clean-css-cli -o cookie-solution.min.css cookie-solution.css`.
+
 ## Make.com Webhook-Setup
 
 Für DSGVO-konformes Consent-Tracking kann jeder Consent-Wechsel an einen Webhook gesendet werden (z.B. Make.com → Google Sheets, Airtable, Datenbank).
@@ -17,7 +19,7 @@ Für DSGVO-konformes Consent-Tracking kann jeder Consent-Wechsel an einen Webhoo
 **Option A: Über Script-Tag (z.B. Webflow)**
 
 ```html
-<script src="https://cookiesolution.vercel.app/cookie-solution.js" 
+<script src="https://cookiesolution.vercel.app/cookie-solution.min.js" 
         data-cs-webhook="https://hook.eu1.make.com/DEINE-WEBHOOK-ID" 
         defer></script>
 ```

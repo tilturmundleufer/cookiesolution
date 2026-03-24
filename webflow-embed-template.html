@@ -1,5 +1,71 @@
-<!-- Cookie Solution - Webflow Code Embed Template -->
-<!-- Kopiere diesen gesamten Code in ein Webflow Code Embed Element -->
+<!--
+  Cookie Solution – Webflow-Integration
+  =====================================
+
+  SCHRITT 1 – Head Code (Pflicht für zuverlässiges Google Consent Mode)
+  --------------------------------------------------------------------
+  Webflow → Project Settings → Custom Code → Head Code
+  Füge das folgende <script> als ERSTES ein, vor GTM, GA4, Facebook Pixel
+  und allen anderen Tracking-Skripten. Die Werte müssen mit cookie-solution.js
+  (GCM_DEFAULT_CONSENT) übereinstimmen.
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ window.dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+    if(!window.__csGcmDefaultsApplied){
+      window.gtag('consent','default',{
+        ad_storage:'denied',
+        ad_user_data:'denied',
+        ad_personalization:'denied',
+        analytics_storage:'denied',
+        functionality_storage:'denied',
+        security_storage:'granted'
+      });
+      window.__csGcmDefaultsApplied = true;
+    }
+  </script>
+
+  SCHRITT 2 – Footer / vor </body>
+  -------------------------------
+  Den folgenden Block (ab Styling) in ein Embed-Element oder „Footer Code“
+  legen – nach dem Head-Snippet. So bleiben Consent-Defaults vor dem Tag-Load.
+
+  Tags wirklich blockieren
+  -------------------------
+  • Normale <script src="…gtm…"> laden sofort und setzen Cookies. Stattdessen
+    GTM/GA4 nur als Platzhalter einbinden, der nach Zustimmung aktiviert wird:
+    type="text/plain" data-category="analytics" (oder marketing).
+
+  Beispiel GTM: Das offizielle Container-Snippet (aus dem GTM-UI) als EIN
+  <script type="text/plain" data-category="analytics">…</script>-Block ohne
+  separates src-Attribut einfügen (GTM-XXXX ersetzen).
+
+  Beispiel GA4 (gtag.js):
+  <script type="text/plain" data-category="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+  <script type="text/plain" data-category="analytics">
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXX');
+  </script>
+
+  Typische Fehler
+  ---------------
+  • GA/GTM/Webflow-Analytics zusätzlich ungeblockt in Head → Cookies vor Consent.
+  • Head-Bootstrap vergessen → Consent Mode zu spät.
+  • Embed nur im Body, ohne Head-Snippet → gleiches Problem.
+
+  Optionen (eigene gehostete cookie-solution.js)
+  ----------------------------------------------
+  • showOnlyInRegions: null = Banner für alle. z. B. ["EU","UK","CH"] = Banner
+    nur bei passender Region (Heuristik über Browser-Sprache; optional geoEndpoint).
+  • Bereits gesetzte Third-Party-Cookies bleiben nach Widerruf ggf. im Browser;
+    Nutzer können sie in den Browser-Einstellungen löschen.
+
+  Datenschutz: Hinweis in der Datenschutzerklärung auf Cookie-Einstellungen
+  und ggf. Löschmöglichkeit ergänzen.
+-->
 
 <!-- CSS Variablen - Passe diese für deine Marke an -->
 <style>
@@ -20,7 +86,7 @@
 </style>
 
 <!-- CSS und JS von Vercel laden -->
-<link rel="stylesheet" href="https://cookiesolution.vercel.app/cookie-solution.css">
+<link rel="stylesheet" href="https://cookiesolution.vercel.app/cookie-solution.min.css">
 
 <!-- Consent Banner -->
 <div id="cs-banner" class="cs-banner" role="dialog" aria-modal="true" aria-labelledby="cs-banner-title" aria-describedby="cs-banner-desc" hidden>
@@ -29,6 +95,13 @@
       <h2 id="cs-banner-title" class="cs-h2" data-i18n="banner_title">Cookies & Datenschutz</h2>
       <p id="cs-banner-desc" class="cs-p" data-i18n="banner_desc">Wir verwenden Cookies, um unsere Website zu betreiben und zu verbessern. Sie können Ihre Auswahl anpassen.</p>
       <button class="cs-link cs-link--prefs" data-cs="open-prefs" data-i18n="banner_prefs">Einstellungen</button>
+      <div class="cs-legal-links">
+        <a class="cs-link" href="/agb" target="_blank" rel="noopener" data-i18n="link_terms">AGB</a>
+        <span class="cs-legal-links__sep">|</span>
+        <a class="cs-link" href="/datenschutz" target="_blank" rel="noopener" data-i18n="link_privacy">Datenschutzerklärung</a>
+        <span class="cs-legal-links__sep">|</span>
+        <a class="cs-link" href="/impressum" target="_blank" rel="noopener" data-i18n="link_imprint">Impressum</a>
+      </div>
     </div>
     <div class="cs-banner__actions">
       <button class="cs-btn cs-btn--secondary" data-cs="reject" data-i18n="btn_reject">Nur Essenzielle</button>
@@ -116,4 +189,4 @@
 
 <!-- JavaScript von Vercel laden -->
 <!-- Optional: data-cs-webhook="https://hook.eu1.make.com/xxx" für Consent-Tracking hinzufügen -->
-<script src="https://cookiesolution.vercel.app/cookie-solution.js" defer></script>
+<script src="https://cookiesolution.vercel.app/cookie-solution.min.js" defer></script>

@@ -6,7 +6,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cookie Solution</title>
-    <link rel="stylesheet" href="./cookie-solution.css" />
+    <!-- Consent-Defaults VOR allen Tag-Skripten (GTM/GA4). Muss mit GCM_DEFAULT_CONSENT in cookie-solution.js übereinstimmen. -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ window.dataLayer.push(arguments); }
+      window.gtag = window.gtag || gtag;
+      if(!window.__csGcmDefaultsApplied){
+        window.gtag('consent','default',{
+          ad_storage:'denied',
+          ad_user_data:'denied',
+          ad_personalization:'denied',
+          analytics_storage:'denied',
+          functionality_storage:'denied',
+          security_storage:'granted'
+        });
+        window.__csGcmDefaultsApplied = true;
+      }
+    </script>
+    <link rel="stylesheet" href="./cookie-solution.min.css" />
   </head>
   <body>
     <!-- Consent Banner -->
@@ -16,6 +33,13 @@
           <h2 id="cs-banner-title" class="cs-h2" data-i18n="banner_title">Cookies & Datenschutz</h2>
           <p id="cs-banner-desc" class="cs-p" data-i18n="banner_desc">Wir verwenden Cookies, um unsere Website zu betreiben und zu verbessern. Sie können Ihre Auswahl anpassen.</p>
           <button class="cs-link cs-link--prefs" data-cs="open-prefs" data-i18n="banner_prefs">Einstellungen</button>
+          <div class="cs-legal-links">
+            <a class="cs-link" href="/agb" target="_blank" rel="noopener" data-i18n="link_terms">AGB</a>
+            <span class="cs-legal-links__sep">|</span>
+            <a class="cs-link" href="/datenschutz" target="_blank" rel="noopener" data-i18n="link_privacy">Datenschutzerklärung</a>
+            <span class="cs-legal-links__sep">|</span>
+            <a class="cs-link" href="/impressum" target="_blank" rel="noopener" data-i18n="link_imprint">Impressum</a>
+          </div>
         </div>
         <div class="cs-banner__actions">
           <button class="cs-btn cs-btn--secondary" data-cs="reject" data-i18n="btn_reject">Nur Essenzielle</button>
@@ -101,6 +125,6 @@
       </div>
     </template>
 
-    <script src="./cookie-solution.js" defer></script>
+    <script src="./cookie-solution.min.js" defer></script>
   </body>
 </html>

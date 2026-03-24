@@ -6,6 +6,9 @@ body{font-family:var(--cs-font)}
 .cs-p{margin:0;color:var(--cs-muted);line-height:1.5}
 .cs-link{background:none;border:0;padding:0;color:var(--cs-primary);cursor:pointer}
 .cs-link--prefs{text-decoration:underline}
+.cs-legal-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.cs-legal-links .cs-link{text-decoration:underline}
+.cs-legal-links__sep{color:var(--cs-muted)}
 
 .cs-btn{border:1px solid var(--cs-border);padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer;white-space:nowrap}
 .cs-btn--primary{background:var(--cs-primary);color:var(--cs-primary-contrast);border-color:transparent}
